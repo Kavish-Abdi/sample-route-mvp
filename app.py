@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import os
 
 # Set up page configuration with a modern widescreen layout
 st.set_page_config(
@@ -61,7 +62,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# CACHED MOCK DATA LAYER (Simulating real-time Pandas pipeline)
+# CACHED MOCK DATA LAYER
 # -------------------------------------------------------------------------
 @st.cache_data
 def load_mock_data():
@@ -90,14 +91,34 @@ def load_mock_data():
 
 df_logs = load_mock_data()
 
+# Helper function for CSV download
+@st.cache_data
+def convert_df_to_csv(df):
+    return df.to_csv(index=False).encode('utf-8')
+
 # -------------------------------------------------------------------------
-# SIDEBAR APPLICATION CONTROLS
+# SIDEBAR APPLICATION CONTROLS & LOGO
 # -------------------------------------------------------------------------
+# Dynamic Logo Loading - Will display safely once you upload 'logo.png'
+try:
+    if os.path.exists('logo.png'):
+        st.sidebar.image('logo.png', use_container_width=True)
+    elif os.path.exists('logo.jpg'):
+        st.sidebar.image('logo.jpg', use_container_width=True)
+except Exception:
+    pass
+
 st.sidebar.title("📦 SampleRoute Portal")
 st.sidebar.markdown("---")
+
 portal_view = st.sidebar.radio(
     "Select Platform Dashboard View:",
-    ["🚀 FMCG Brand Portal", "🍳 Cloud Kitchen Portal"]
+    [
+        "🏠 Executive Summary", 
+        "🚀 FMCG Brand Portal", 
+        "🍳 Cloud Kitchen Portal",
+        "📈 Financial Forecaster"
+    ]
 )
 
 st.sidebar.markdown("---")
@@ -107,9 +128,39 @@ st.sidebar.caption("**Institution:** SP Jain School of Global Management")
 st.sidebar.caption("**Location Focus:** Dubai Hubs")
 
 # -------------------------------------------------------------------------
-# VIEW 1: FMCG BRAND PORTAL
+# PAGE 0: EXECUTIVE SUMMARY (LANDING PAGE)
 # -------------------------------------------------------------------------
-if "FMCG Brand Portal" in portal_view:
+if "Executive Summary" in portal_view:
+    st.title("SampleRoute: The Blue Ocean of Product Sampling")
+    st.markdown("##### *Transforming Independent Cloud Kitchens into Highly Targeted Micro-Distribution Networks.*")
+    st.markdown("---")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.error("❌ The Old Way (Aggregator Monopolies)")
+        st.markdown("""
+        * **High Listing Fees:** Tech giants lock out mid-tier FMCG brands.
+        * **Low Targeting:** Traditional retail sampling wastes spend on the wrong demographic.
+        * **Zero Data Loop:** Brands hand out free samples but rarely capture consumer feedback.
+        """)
+        
+    with col2:
+        st.success("✅ The SampleRoute Way (Asset-Light Aggregator)")
+        st.markdown("""
+        * **Monetizing Empty Space:** Utilizing the empty space in standard food delivery bags.
+        * **Hyper-Targeting:** Injecting samples directly into specific consumer diets (e.g., Vegan snacks to JLT).
+        * **Zero-Party Data Generation:** QR codes on samples incentivize feedback loops.
+        """)
+        
+    st.markdown("---")
+    st.subheader("🔄 Operational Mechanism Workflow")
+    st.info("📦 **Brand Sets Campaign** ➡️ 🍳 **Kitchen Bags Order + Sample** ➡️ 📱 **Consumer Scans QR Code** ➡️ 📊 **Dashboard Captures Data**")
+
+# -------------------------------------------------------------------------
+# PAGE 1: FMCG BRAND PORTAL (WITH CSV DOWNLOAD)
+# -------------------------------------------------------------------------
+elif "FMCG Brand Portal" in portal_view:
     st.title("FMCG Brand Analytics Portal")
     st.markdown("##### *Live Campaign ROI & Zero-Party Data Strategy Insights*")
     st.markdown("---")
@@ -129,7 +180,7 @@ if "FMCG Brand Portal" in portal_view:
     scan_rate = (total_scans / total_dispatched * 100) if total_dispatched > 0 else 0.0
     avg_rating = filtered_df['Rating'].mean()
     
-    # Interactive Metrics Cards (Hover animations applied via CSS)
+    # Interactive Metrics Cards
     m1, m2, m3, m4 = st.columns(4)
     m1.metric(label="Samples Dispatched", value=f"{total_dispatched:,}")
     m2.metric(label="Zero-Party QR Scans", value=f"{total_scans:,}")
@@ -144,7 +195,6 @@ if "FMCG Brand Portal" in portal_view:
     with col_c1:
         st.subheader("📍 Geofenced Delivery Penetration")
         loc_counts = filtered_df.groupby('Location')['Dispatched'].sum().reset_index()
-        # FIXED: Changed color sequence to a universally accepted Pastel palette and updated template to Dark Mode
         fig_loc = px.bar(loc_counts, x='Location', y='Dispatched', 
                          color='Location', title=f"Sample Dispatches: {selected_product}",
                          color_discrete_sequence=px.colors.qualitative.Pastel,
@@ -156,16 +206,28 @@ if "FMCG Brand Portal" in portal_view:
         st.subheader("🎯 Loop Closure Conversion Analysis")
         scan_counts = filtered_df['QR_Scanned'].map({1: 'Scanned (Feedback Saved)', 0: 'Unscanned Space'}).value_counts().reset_index()
         scan_counts.columns = ['Status', 'Count']
-        # FIXED: Updated pie chart colors to pop on a dark background and changed template
         fig_pie = px.pie(scan_counts, values='Count', names='Status', 
                          color='Status', color_discrete_map={'Scanned (Feedback Saved)': '#00CC96', 'Unscanned Space': '#444444'},
                          hole=0.4, template="plotly_dark")
         st.plotly_chart(fig_pie, use_container_width=True)
 
+    st.markdown("---")
+    st.subheader("📥 Export Zero-Party Consumer Data")
+    st.markdown("Download the raw feedback and geolocation data for integration into your CRM.")
+    
+    # Download Button Feature
+    csv_data = convert_df_to_csv(filtered_df)
+    st.download_button(
+        label="Download Active Campaign CSV",
+        data=csv_data,
+        file_name=f"{selected_product.replace(' ', '_')}_SampleRoute_Data.csv",
+        mime='text/csv',
+    )
+
 # -------------------------------------------------------------------------
-# VIEW 2: CLOUD KITCHEN PORTAL
+# PAGE 2: CLOUD KITCHEN PORTAL
 # -------------------------------------------------------------------------
-else:
+elif "Cloud Kitchen Portal" in portal_view:
     st.title("Independent Cloud Kitchen Portal")
     st.markdown("##### *Monetizing Underutilized Empty Delivery Bag Space*")
     st.markdown("---")
@@ -175,7 +237,7 @@ else:
     
     # Calculate Yield Metrics
     k_dispatched = kitchen_df['Dispatched'].sum()
-    payout_per_sample = 0.87  # Operational contract payout calculated in Appendix A
+    payout_per_sample = 0.87  
     total_earnings = k_dispatched * payout_per_sample
     
     allocated_stock = 750
@@ -198,3 +260,46 @@ else:
     st.dataframe(kitchen_display_df.sort_values(by='Timestamp (GST)', ascending=False).head(12), use_container_width=True)
     
     st.info("💡 **Operational Directive:** To optimize efficiency, match target labels directly onto food bag delivery receipts prior to final packaging seals.")
+
+# -------------------------------------------------------------------------
+# PAGE 3: FINANCIAL FORECASTER (UNIT ECONOMICS)
+# -------------------------------------------------------------------------
+elif "Financial Forecaster" in portal_view:
+    st.title("Financial Forecaster & Unit Economics")
+    st.markdown("##### *Interactive Scalability & Profitability Sandbox*")
+    st.markdown("---")
+    
+    st.markdown("Use the sliders below to adjust the unit economics and forecast platform profitability based on the business plan projections.")
+    
+    col_slider, col_chart = st.columns([1.2, 2])
+    
+    with col_slider:
+        st.subheader("⚙️ Scenario Variables")
+        volume = st.slider("Target Sample Volume (Monthly)", min_value=10000, max_value=500000, value=120000, step=10000)
+        cps = st.slider("Cost Per Sample (CPS) Billed to Brand (AED)", min_value=1.0, max_value=5.0, value=2.5, step=0.1)
+        kitchen_share = st.slider("Kitchen Revenue Share %", min_value=10, max_value=50, value=35, step=1)
+        
+        # Calculations
+        gross_revenue = volume * cps
+        payout_to_kitchens = gross_revenue * (kitchen_share / 100)
+        platform_gross_profit = gross_revenue - payout_to_kitchens
+        
+    with col_chart:
+        # Display Metrics
+        st.subheader("📈 Projected Outcomes")
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Gross Revenue", f"AED {gross_revenue:,.0f}")
+        c2.metric("Kitchen Payouts", f"AED {payout_to_kitchens:,.0f}")
+        c3.metric("Platform Gross Profit", f"AED {platform_gross_profit:,.0f}")
+        
+        # Simple breakdown chart
+        chart_data = pd.DataFrame({
+            "Category": ["Platform Gross Profit", "Cloud Kitchen Payouts"],
+            "Amount (AED)": [platform_gross_profit, payout_to_kitchens]
+        })
+        
+        fig_finance = px.pie(chart_data, values="Amount (AED)", names="Category", 
+                             title="Revenue Split Architecture",
+                             color="Category", color_discrete_map={"Platform Gross Profit": "#00CC96", "Cloud Kitchen Payouts": "#333333"},
+                             hole=0.5, template="plotly_dark")
+        st.plotly_chart(fig_finance, use_container_width=True)
