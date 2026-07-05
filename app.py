@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import os
+import time
 
 # Set up page configuration with a modern widescreen layout
 st.set_page_config(
@@ -53,7 +54,6 @@ st.markdown("""
             color: #FFFFFF !important; 
         }
         
-        /* Unified Footer Styling */
         .brand-footer {
             text-align: center;
             margin-top: 50px;
@@ -72,7 +72,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# CACHED MOCK DATA LAYER
+# CACHED MOCK DATA LAYER (Now with GPS Coordinates for the Map!)
 # -------------------------------------------------------------------------
 @st.cache_data
 def load_mock_data():
@@ -84,9 +84,26 @@ def load_mock_data():
     products = ['Organic Protein Bar', 'Keto Electrolyte Drink', 'Premium Cold Brew', 'Baked Veggie Chips']
     kitchens = ['CloudKit JLT 1', 'Marina Ghost Eats', 'BizBay Central Kitchen', 'Downtown Gourmet Lab']
     
+    # Base coordinates for Dubai Hubs
+    coords = {
+        'JLT': [25.0777, 55.1404],
+        'Dubai Marina': [25.0805, 55.1403],
+        'Business Bay': [25.1856, 55.2670],
+        'Downtown Dubai': [25.1972, 55.2744]
+    }
+    
+    # Generate random data
+    loc_choices = np.random.choice(locations, n_records, p=[0.4, 0.3, 0.2, 0.1])
+    
+    # Add a slight random scatter to the coordinates so the map dots don't stack perfectly on top of each other
+    lats = [coords[loc][0] + np.random.normal(0, 0.005) for loc in loc_choices]
+    lons = [coords[loc][1] + np.random.normal(0, 0.005) for loc in loc_choices]
+    
     data = {
         'Timestamp': pd.date_range(start='2026-05-01', periods=n_records, freq='h'),
-        'Location': np.random.choice(locations, n_records, p=[0.4, 0.3, 0.2, 0.1]),
+        'Location': loc_choices,
+        'lat': lats,
+        'lon': lons,
         'Category': np.random.choice(categories, n_records),
         'Product': np.random.choice(products, n_records),
         'Kitchen': np.random.choice(kitchens, n_records),
@@ -97,6 +114,16 @@ def load_mock_data():
     
     df = pd.DataFrame(data)
     df.loc[df['QR_Scanned'] == 0, 'Rating'] = np.nan
+    
+    # Mocking NLP Sentiment based on Ratings
+    conditions = [
+        (df['Rating'] >= 4),
+        (df['Rating'] == 3),
+        (df['Rating'].isna())
+    ]
+    choices = ['Positive 📈', 'Neutral ➖', 'No Data']
+    df['Sentiment'] = np.select(conditions, choices, default='Negative 📉')
+    
     return df
 
 df_logs = load_mock_data()
@@ -150,7 +177,6 @@ if "The Vision (Genesis)" in portal_view:
     st.title("SampleRoute: The Blue Ocean of Product Sampling")
     st.markdown("##### *Transforming Independent Cloud Kitchens into Highly Targeted Micro-Distribution Networks.*")
     
-    # Futuristic Hero Image
     st.image("https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_container_width=True, caption="Activating the 'Empty Bag Space' in hyper-local delivery networks.")
     
     st.markdown("---")
@@ -179,7 +205,7 @@ if "The Vision (Genesis)" in portal_view:
     render_footer()
 
 # -------------------------------------------------------------------------
-# PAGE 1: FMCG BRAND PORTAL 
+# PAGE 1: FMCG BRAND PORTAL (Now with Maps & Sentiment)
 # -------------------------------------------------------------------------
 elif "FMCG Brand Portal" in portal_view:
     st.title("FMCG Brand Analytics Portal")
@@ -207,20 +233,17 @@ elif "FMCG Brand Portal" in portal_view:
     
     st.markdown("---")
     
+    # NEW: Live Geographic Map
+    st.subheader("🗺️ Live Geographic Node Intercepts (Dubai)")
+    st.markdown("Real-time GPS tracking of sample bag injections across localized fulfillment nodes.")
+    st.map(filtered_df[['lat', 'lon']], zoom=10, use_container_width=True)
+    
+    st.markdown("---")
+    
     col_c1, col_c2 = st.columns(2)
     
     with col_c1:
-        st.subheader("📍 Geofenced Delivery Penetration")
-        loc_counts = filtered_df.groupby('Location')['Dispatched'].sum().reset_index()
-        fig_loc = px.bar(loc_counts, x='Location', y='Dispatched', 
-                         color='Location', title=f"Sample Dispatches: {selected_product}",
-                         color_discrete_sequence=px.colors.qualitative.Pastel,
-                         template="plotly_dark")
-        fig_loc.update_layout(showlegend=False)
-        st.plotly_chart(fig_loc, use_container_width=True)
-        
-    with col_c2:
-        st.subheader("🎯 Loop Closure Conversion Analysis")
+        st.subheader("🎯 Loop Closure Conversion")
         scan_counts = filtered_df['QR_Scanned'].map({1: 'Scanned (Feedback Saved)', 0: 'Unscanned Space'}).value_counts().reset_index()
         scan_counts.columns = ['Status', 'Count']
         fig_pie = px.pie(scan_counts, values='Count', names='Status', 
@@ -228,18 +251,36 @@ elif "FMCG Brand Portal" in portal_view:
                          hole=0.4, template="plotly_dark")
         st.plotly_chart(fig_pie, use_container_width=True)
 
+    with col_c2:
+        st.subheader("🧠 NLP Sentiment Analysis")
+        # Filter out unscanned bags to only show actual feedback sentiment
+        sentiment_df = filtered_df[filtered_df['QR_Scanned'] == 1]
+        sent_counts = sentiment_df['Sentiment'].value_counts().reset_index()
+        sent_counts.columns = ['Sentiment', 'Volume']
+        fig_sent = px.bar(sent_counts, x='Sentiment', y='Volume',
+                          color='Sentiment',
+                          color_discrete_sequence=['#00CC96', '#FFC107', '#FF4B4B'],
+                          template="plotly_dark")
+        fig_sent.update_layout(showlegend=False)
+        st.plotly_chart(fig_sent, use_container_width=True)
+
     st.markdown("---")
     col_dl1, col_dl2 = st.columns([3, 1])
     with col_dl1:
         st.subheader("📥 Export Zero-Party Consumer Data")
         st.markdown("Download the raw feedback and geolocation data for CRM integration.")
         csv_data = convert_df_to_csv(filtered_df)
-        st.download_button(
+        
+        # UX Enhancement: Toast notification on download
+        if st.download_button(
             label="Download Active Campaign CSV",
             data=csv_data,
             file_name=f"{selected_product.replace(' ', '_')}_SampleRoute_Data.csv",
             mime='text/csv',
-        )
+        ):
+            st.toast('Dataset Exported Successfully! 📦', icon='✅')
+            st.balloons() # Adds a celebratory animation
+            
     with col_dl2:
         st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", use_container_width=True)
 
@@ -266,7 +307,13 @@ elif "Cloud Kitchen Portal" in portal_view:
     km1, km2, km3 = st.columns(3)
     km1.metric(label="Samples Injected in Food Bags", value=f"{k_dispatched:,} Deliveries")
     km2.metric(label="Net Passive Revenue Earned", value=f"AED {total_earnings:,.2f}")
-    km3.metric(label="Remaining On-Site Sample Inventory", value=f"{remaining_stock} Units", delta=f"-{k_dispatched} units dispatched")
+    
+    # Conditional stock warning for Logistics automation
+    delta_color = "normal" if remaining_stock > 200 else "inverse"
+    km3.metric(label="Remaining On-Site Inventory", value=f"{remaining_stock} Units", delta=f"-{k_dispatched} units", delta_color=delta_color)
+    
+    if remaining_stock <= 200:
+        st.warning("⚠️ **Logistics Alert:** Sample inventory is running low at this node. Automated restock protocols initiated.")
     
     st.markdown("---")
     
