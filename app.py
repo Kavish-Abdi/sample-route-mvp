@@ -53,7 +53,7 @@ st.markdown("""
             font-weight: 600 !important;
         }
     </style>
-""", unsafe_content_type=True)
+""", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
 # CACHED MOCK DATA LAYER (Simulating real-time Pandas pipeline)
