@@ -12,45 +12,50 @@ st.set_page_config(
 )
 
 # -------------------------------------------------------------------------
-# CUSTOM INJECTED CSS FOR PREMIUM TYPOGRAPHY & INTERACTIVE CARD STYLING
+# CUSTOM INJECTED CSS FOR DARK MODE & PREMIUM TYPOGRAPHY
 # -------------------------------------------------------------------------
 st.markdown("""
     <style>
         /* Import premium serif fonts for headers */
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
         
-        /* Apply elegant serif typography globally to headers */
+        /* Apply elegant serif typography globally to headers (Bright White for Dark Mode) */
         h1, h2, h3, .main-title {
             font-family: 'Playfair Display', 'Times New Roman', Georgia, serif !important;
-            color: #1A252C !important;
+            color: #FFFFFF !important; 
             font-weight: 700 !important;
         }
         
-        /* Custom styled dynamic metric container cards */
+        /* Custom styled dynamic metric container cards (Sleek Dark Grey) */
         div[data-testid="stMetric"] {
-            background-color: #F8F9FA;
-            border: 1px solid #E9ECEF;
+            background-color: #1E1E1E !important;
+            border: 1px solid #333333 !important;
             padding: 20px 25px !important;
             border-radius: 12px !important;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease-in-out;
         }
         
         /* Interactive hover state effect for dashboard cards */
         div[data-testid="stMetric"]:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-            border-color: #CED4DA;
-            background-color: #FFFFFF;
+            box-shadow: 0 8px 15px rgba(255, 255, 255, 0.05);
+            border-color: #555555 !important;
+            background-color: #252525 !important;
         }
         
-        /* Metric Label Styling */
+        /* Metric Label Styling (Bright Grey for visibility) */
         div[data-testid="stMetricLabel"] > div {
             font-size: 0.95rem !important;
             text-transform: uppercase !important;
             letter-spacing: 0.5px !important;
-            color: #6C757D !important;
+            color: #B0B0B0 !important; 
             font-weight: 600 !important;
+        }
+        
+        /* Metric Value Text (Pure White) */
+        div[data-testid="stMetricValue"] > div {
+            color: #FFFFFF !important; 
         }
     </style>
 """, unsafe_allow_html=True)
@@ -69,7 +74,6 @@ def load_mock_data():
     kitchens = ['CloudKit JLT 1', 'Marina Ghost Eats', 'BizBay Central Kitchen', 'Downtown Gourmet Lab']
     
     data = {
-        # FIXED: Changed freq='H' to freq='h' for newer pandas compatibility
         'Timestamp': pd.date_range(start='2026-05-01', periods=n_records, freq='h'),
         'Location': np.random.choice(locations, n_records, p=[0.4, 0.3, 0.2, 0.1]),
         'Category': np.random.choice(categories, n_records),
@@ -140,10 +144,11 @@ if "FMCG Brand Portal" in portal_view:
     with col_c1:
         st.subheader("📍 Geofenced Delivery Penetration")
         loc_counts = filtered_df.groupby('Location')['Dispatched'].sum().reset_index()
+        # FIXED: Changed color sequence to a universally accepted Pastel palette and updated template to Dark Mode
         fig_loc = px.bar(loc_counts, x='Location', y='Dispatched', 
                          color='Location', title=f"Sample Dispatches: {selected_product}",
-                         color_discrete_sequence=px.colors.qualitative.Muted,
-                         template="plotly_white")
+                         color_discrete_sequence=px.colors.qualitative.Pastel,
+                         template="plotly_dark")
         fig_loc.update_layout(showlegend=False)
         st.plotly_chart(fig_loc, use_container_width=True)
         
@@ -151,9 +156,10 @@ if "FMCG Brand Portal" in portal_view:
         st.subheader("🎯 Loop Closure Conversion Analysis")
         scan_counts = filtered_df['QR_Scanned'].map({1: 'Scanned (Feedback Saved)', 0: 'Unscanned Space'}).value_counts().reset_index()
         scan_counts.columns = ['Status', 'Count']
+        # FIXED: Updated pie chart colors to pop on a dark background and changed template
         fig_pie = px.pie(scan_counts, values='Count', names='Status', 
-                         color='Status', color_discrete_map={'Scanned (Feedback Saved)': '#1A252C', 'Unscanned Space': '#E9ECEF'},
-                         hole=0.4, template="plotly_white")
+                         color='Status', color_discrete_map={'Scanned (Feedback Saved)': '#00CC96', 'Unscanned Space': '#444444'},
+                         hole=0.4, template="plotly_dark")
         st.plotly_chart(fig_pie, use_container_width=True)
 
 # -------------------------------------------------------------------------
