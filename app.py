@@ -72,7 +72,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
-# CACHED MOCK DATA LAYER (Now with GPS Coordinates for the Map!)
+# CACHED MOCK DATA LAYER 
 # -------------------------------------------------------------------------
 @st.cache_data
 def load_mock_data():
@@ -84,7 +84,6 @@ def load_mock_data():
     products = ['Organic Protein Bar', 'Keto Electrolyte Drink', 'Premium Cold Brew', 'Baked Veggie Chips']
     kitchens = ['CloudKit JLT 1', 'Marina Ghost Eats', 'BizBay Central Kitchen', 'Downtown Gourmet Lab']
     
-    # Base coordinates for Dubai Hubs
     coords = {
         'JLT': [25.0777, 55.1404],
         'Dubai Marina': [25.0805, 55.1403],
@@ -92,10 +91,8 @@ def load_mock_data():
         'Downtown Dubai': [25.1972, 55.2744]
     }
     
-    # Generate random data
     loc_choices = np.random.choice(locations, n_records, p=[0.4, 0.3, 0.2, 0.1])
     
-    # Add a slight random scatter to the coordinates so the map dots don't stack perfectly on top of each other
     lats = [coords[loc][0] + np.random.normal(0, 0.005) for loc in loc_choices]
     lons = [coords[loc][1] + np.random.normal(0, 0.005) for loc in loc_choices]
     
@@ -109,13 +106,13 @@ def load_mock_data():
         'Kitchen': np.random.choice(kitchens, n_records),
         'Dispatched': [1] * n_records,
         'QR_Scanned': np.random.choice([0, 1], n_records, p=[0.83, 0.17]), 
-        'Rating': np.random.choice([3, 4, 5], n_records, p=[0.1, 0.3, 0.6])
+        'Rating': np.random.choice([3, 4, 5], n_records, p=[0.1, 0.3, 0.6]),
+        'CO2_Saved_kg': [0.15] * n_records # 0.15kg of CO2 saved per sample by avoiding dedicated vans
     }
     
     df = pd.DataFrame(data)
     df.loc[df['QR_Scanned'] == 0, 'Rating'] = np.nan
     
-    # Mocking NLP Sentiment based on Ratings
     conditions = [
         (df['Rating'] >= 4),
         (df['Rating'] == 3),
@@ -160,6 +157,8 @@ portal_view = st.sidebar.radio(
         "🚀 FMCG Brand Portal", 
         "🍳 Cloud Kitchen Portal",
         "🧠 AI Demand Forecaster",
+        "🌱 GX & Sustainability Impact",
+        "🧑‍🤝‍🧑 Consumer Empathy Map",
         "⚙️ System Architecture"
     ]
 )
@@ -194,7 +193,7 @@ if "The Vision (Genesis)" in portal_view:
         st.success("🟢 The SampleRoute Node Network")
         st.markdown("""
         * **Spatial Monetization:** Utilizing the empty space in standard food delivery bags.
-        * **Hyper-Targeting:** Injecting samples directly into specific consumer diets (e.g., Vegan snacks to JLT).
+        * **Hyper-Targeting:** Injecting samples directly into specific consumer diets.
         * **Zero-Party Data Generation:** Gamified QR codes capture high-fidelity behavioral data.
         """)
         
@@ -205,7 +204,7 @@ if "The Vision (Genesis)" in portal_view:
     render_footer()
 
 # -------------------------------------------------------------------------
-# PAGE 1: FMCG BRAND PORTAL (Now with Maps & Sentiment)
+# PAGE 1: FMCG BRAND PORTAL 
 # -------------------------------------------------------------------------
 elif "FMCG Brand Portal" in portal_view:
     st.title("FMCG Brand Analytics Portal")
@@ -217,6 +216,10 @@ elif "FMCG Brand Portal" in portal_view:
         selected_product = st.selectbox("Select Active Packaged Food Campaign:", df_logs['Product'].unique())
     with col_f2:
         selected_loc = st.multiselect("Filter Target Delivery Zones:", df_logs['Location'].unique(), default=df_logs['Location'].unique())
+        
+    # Simulated API Loading Animation
+    with st.spinner('Syncing real-time node intercept data...'):
+        time.sleep(0.8) # Quick delay for premium feel
         
     filtered_df = df_logs[(df_logs['Product'] == selected_product) & (df_logs['Location'].isin(selected_loc))]
     
@@ -233,9 +236,7 @@ elif "FMCG Brand Portal" in portal_view:
     
     st.markdown("---")
     
-    # NEW: Live Geographic Map
     st.subheader("🗺️ Live Geographic Node Intercepts (Dubai)")
-    st.markdown("Real-time GPS tracking of sample bag injections across localized fulfillment nodes.")
     st.map(filtered_df[['lat', 'lon']], zoom=10, use_container_width=True)
     
     st.markdown("---")
@@ -253,7 +254,6 @@ elif "FMCG Brand Portal" in portal_view:
 
     with col_c2:
         st.subheader("🧠 NLP Sentiment Analysis")
-        # Filter out unscanned bags to only show actual feedback sentiment
         sentiment_df = filtered_df[filtered_df['QR_Scanned'] == 1]
         sent_counts = sentiment_df['Sentiment'].value_counts().reset_index()
         sent_counts.columns = ['Sentiment', 'Volume']
@@ -271,7 +271,6 @@ elif "FMCG Brand Portal" in portal_view:
         st.markdown("Download the raw feedback and geolocation data for CRM integration.")
         csv_data = convert_df_to_csv(filtered_df)
         
-        # UX Enhancement: Toast notification on download
         if st.download_button(
             label="Download Active Campaign CSV",
             data=csv_data,
@@ -279,7 +278,7 @@ elif "FMCG Brand Portal" in portal_view:
             mime='text/csv',
         ):
             st.toast('Dataset Exported Successfully! 📦', icon='✅')
-            st.balloons() # Adds a celebratory animation
+            st.balloons()
             
     with col_dl2:
         st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", use_container_width=True)
@@ -308,7 +307,6 @@ elif "Cloud Kitchen Portal" in portal_view:
     km1.metric(label="Samples Injected in Food Bags", value=f"{k_dispatched:,} Deliveries")
     km2.metric(label="Net Passive Revenue Earned", value=f"AED {total_earnings:,.2f}")
     
-    # Conditional stock warning for Logistics automation
     delta_color = "normal" if remaining_stock > 200 else "inverse"
     km3.metric(label="Remaining On-Site Inventory", value=f"{remaining_stock} Units", delta=f"-{k_dispatched} units", delta_color=delta_color)
     
@@ -335,8 +333,6 @@ elif "AI Demand Forecaster" in portal_view:
     st.title("AI Demand Forecaster & Unit Economics")
     st.markdown("##### *Interactive Scalability Sandbox*")
     st.markdown("---")
-    
-    st.markdown("Use the parameters below to run simulated revenue models based on the SampleRoute algorithm.")
     
     col_slider, col_chart = st.columns([1.2, 2])
     
@@ -371,7 +367,64 @@ elif "AI Demand Forecaster" in portal_view:
     render_footer()
 
 # -------------------------------------------------------------------------
-# PAGE 4: SYSTEM ARCHITECTURE
+# PAGE 4: GX & SUSTAINABILITY IMPACT 
+# -------------------------------------------------------------------------
+elif "🌱 GX & Sustainability Impact" in portal_view:
+    st.title("Green Transformation (GX) Impact")
+    st.markdown("##### *Decarbonizing the Packaged Food Sampling Supply Chain*")
+    st.markdown("---")
+    
+    st.image("https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_container_width=True, caption="SampleRoute leverages existing logistics infrastructure to eliminate redundant carbon footprints.")
+    
+    total_samples = len(df_logs)
+    total_co2_saved = df_logs['CO2_Saved_kg'].sum()
+    
+    st.markdown("""
+    By utilizing the empty capacity inside pre-existing food delivery orders, SampleRoute eliminates the need for FMCG brands to deploy dedicated sampling fleets, promotional kiosks, and single-use event infrastructure.
+    """)
+    
+    sm1, sm2, sm3 = st.columns(3)
+    sm1.metric(label="Total Samples Distributed", value=f"{total_samples:,}")
+    sm2.metric(label="CO2 Emissions Avoided (kg)", value=f"{total_co2_saved:,.1f}")
+    sm3.metric(label="Fleet Vehicles Kept Off Road", value=f"{int(total_samples / 50)}")
+    
+    render_footer()
+
+# -------------------------------------------------------------------------
+# PAGE 5: CONSUMER EMPATHY MAP
+# -------------------------------------------------------------------------
+elif "🧑‍🤝‍🧑 Consumer Empathy Map" in portal_view:
+    st.title("Consumer Empathy Map & Journey")
+    st.markdown("##### *The Human-Centered Design Behind High-Conversion Sampling*")
+    st.markdown("---")
+    
+    st.image("https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_container_width=True, caption="Mapping the psychological triggers of the end consumer.")
+    
+    st.markdown("""
+    To achieve an industry-leading 17% QR scan conversion rate, SampleRoute applies deep Empathy Mapping to the consumer's unboxing experience.
+    """)
+    
+    col_emp1, col_emp2 = st.columns(2)
+    with col_emp1:
+        st.info("💭 **THINK & FEEL (The Unboxing Moment)**")
+        st.markdown("""
+        * *Surprise:* "I didn't order this! A free premium protein bar?"
+        * *Delight:* "This perfectly matches the healthy salad I just ordered."
+        * *Curiosity:* "What does this QR code do?"
+        """)
+        
+    with col_emp2:
+        st.success("🏃 **DO (The Conversion Action)**")
+        st.markdown("""
+        * Scans the QR code while eating their meal.
+        * Engages with the gamified, 15-second mobile survey.
+        * Claims the discount code for their next cloud kitchen order.
+        """)
+        
+    render_footer()
+
+# -------------------------------------------------------------------------
+# PAGE 6: SYSTEM ARCHITECTURE
 # -------------------------------------------------------------------------
 elif "System Architecture" in portal_view:
     st.title("⚙️ System Architecture & Tech Stack")
