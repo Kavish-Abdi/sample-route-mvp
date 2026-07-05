@@ -36,7 +36,7 @@ st.markdown("""
         
         div[data-testid="stMetric"]:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 15px rgba(0, 204, 150, 0.15); /* Adds a futuristic neon-green glow on hover */
+            box-shadow: 0 8px 15px rgba(0, 204, 150, 0.15); 
             border-color: #00CC96 !important;
             background-color: #252525 !important;
         }
@@ -51,6 +51,22 @@ st.markdown("""
         
         div[data-testid="stMetricValue"] > div {
             color: #FFFFFF !important; 
+        }
+        
+        /* Unified Footer Styling */
+        .brand-footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #333333;
+            color: #666666;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            font-family: 'Playfair Display', serif;
+        }
+        .brand-footer span {
+            color: #00CC96;
+            font-weight: bold;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -89,6 +105,13 @@ df_logs = load_mock_data()
 def convert_df_to_csv(df):
     return df.to_csv(index=False).encode('utf-8')
 
+def render_footer():
+    st.markdown("""
+        <div class="brand-footer">
+            <span>SampleRoute™</span> | Monetizing the Last Mile | Est. 2026
+        </div>
+    """, unsafe_allow_html=True)
+
 # -------------------------------------------------------------------------
 # SIDEBAR APPLICATION CONTROLS & LOGO
 # -------------------------------------------------------------------------
@@ -114,11 +137,11 @@ portal_view = st.sidebar.radio(
     ]
 )
 
-# Pushing the author info to the very bottom
 st.sidebar.markdown("---")
-st.sidebar.markdown("<br><br><br><br><br>", unsafe_allow_html=True) # Adds vertical space
-st.sidebar.caption("Individual assignment done by Syed Ali Kavish Abdi")
-st.sidebar.caption("MGB Term 3 | Section B")
+st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True) 
+st.sidebar.caption("👨‍💻 **Founder:** Syed Ali Kavish Abdi")
+st.sidebar.caption("🎓 **Institution:** SP Jain School of Global Management")
+st.sidebar.caption("📚 **Cohort:** MGB Term 3 | Section B")
 
 # -------------------------------------------------------------------------
 # PAGE 0: THE VISION (LANDING PAGE)
@@ -126,10 +149,13 @@ st.sidebar.caption("MGB Term 3 | Section B")
 if "The Vision (Genesis)" in portal_view:
     st.title("SampleRoute: The Blue Ocean of Product Sampling")
     st.markdown("##### *Transforming Independent Cloud Kitchens into Highly Targeted Micro-Distribution Networks.*")
+    
+    # Futuristic Hero Image
+    st.image("https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_container_width=True, caption="Activating the 'Empty Bag Space' in hyper-local delivery networks.")
+    
     st.markdown("---")
     
     col1, col2 = st.columns(2)
-    
     with col1:
         st.error("❌ The Legacy Ecosystem")
         st.markdown("""
@@ -149,6 +175,8 @@ if "The Vision (Genesis)" in portal_view:
     st.markdown("---")
     st.subheader("🔄 Automated Workflow Topology")
     st.info("📦 **Brand Deploys Inventory** ➡️ 🍳 **Node Injects Sample** ➡️ 📱 **Consumer Scans UI** ➡️ 📊 **Data Aggregated in Real-Time**")
+    
+    render_footer()
 
 # -------------------------------------------------------------------------
 # PAGE 1: FMCG BRAND PORTAL 
@@ -201,15 +229,21 @@ elif "FMCG Brand Portal" in portal_view:
         st.plotly_chart(fig_pie, use_container_width=True)
 
     st.markdown("---")
-    st.subheader("📥 Export Zero-Party Consumer Data")
-    
-    csv_data = convert_df_to_csv(filtered_df)
-    st.download_button(
-        label="Download Active Campaign CSV",
-        data=csv_data,
-        file_name=f"{selected_product.replace(' ', '_')}_SampleRoute_Data.csv",
-        mime='text/csv',
-    )
+    col_dl1, col_dl2 = st.columns([3, 1])
+    with col_dl1:
+        st.subheader("📥 Export Zero-Party Consumer Data")
+        st.markdown("Download the raw feedback and geolocation data for CRM integration.")
+        csv_data = convert_df_to_csv(filtered_df)
+        st.download_button(
+            label="Download Active Campaign CSV",
+            data=csv_data,
+            file_name=f"{selected_product.replace(' ', '_')}_SampleRoute_Data.csv",
+            mime='text/csv',
+        )
+    with col_dl2:
+        st.image("https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80", use_container_width=True)
+
+    render_footer()
 
 # -------------------------------------------------------------------------
 # PAGE 2: CLOUD KITCHEN PORTAL
@@ -242,6 +276,10 @@ elif "Cloud Kitchen Portal" in portal_view:
     kitchen_display_df.columns = ['Timestamp (GST)', 'Injected Product Sample', 'Geographic Market', 'Status Loop']
     
     st.dataframe(kitchen_display_df.sort_values(by='Timestamp (GST)', ascending=False).head(12), use_container_width=True)
+    
+    st.info("💡 **Operational Directive:** To optimize efficiency, match target labels directly onto food bag delivery receipts prior to final packaging seals.")
+    
+    render_footer()
 
 # -------------------------------------------------------------------------
 # PAGE 3: AI DEMAND FORECASTER 
@@ -283,6 +321,8 @@ elif "AI Demand Forecaster" in portal_view:
                              hole=0.5, template="plotly_dark")
         st.plotly_chart(fig_finance, use_container_width=True)
 
+    render_footer()
+
 # -------------------------------------------------------------------------
 # PAGE 4: SYSTEM ARCHITECTURE
 # -------------------------------------------------------------------------
@@ -290,6 +330,8 @@ elif "System Architecture" in portal_view:
     st.title("⚙️ System Architecture & Tech Stack")
     st.markdown("##### *How SampleRoute is built to scale.*")
     st.markdown("---")
+    
+    st.image("https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80", use_container_width=True, caption="Serverless infrastructure ensuring zero downtime during peak lunch and dinner hours.")
     
     st.markdown("""
     To ensure seamless integration with our B2B partners without disrupting kitchen operations, SampleRoute utilizes a modern, asset-light tech stack:
@@ -307,3 +349,5 @@ elif "System Architecture" in portal_view:
         ├── logo.png               # Brand Assets
         └── README.md              # Documentation
         """, language="bash")
+        
+    render_footer()
