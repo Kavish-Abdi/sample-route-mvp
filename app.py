@@ -69,7 +69,8 @@ def load_mock_data():
     kitchens = ['CloudKit JLT 1', 'Marina Ghost Eats', 'BizBay Central Kitchen', 'Downtown Gourmet Lab']
     
     data = {
-        'Timestamp': pd.date_range(start='2026-05-01', periods=n_records, freq='H'),
+        # FIXED: Changed freq='H' to freq='h' for newer pandas compatibility
+        'Timestamp': pd.date_range(start='2026-05-01', periods=n_records, freq='h'),
         'Location': np.random.choice(locations, n_records, p=[0.4, 0.3, 0.2, 0.1]),
         'Category': np.random.choice(categories, n_records),
         'Product': np.random.choice(products, n_records),
