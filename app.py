@@ -107,7 +107,7 @@ def load_mock_data():
         'Dispatched': [1] * n_records,
         'QR_Scanned': np.random.choice([0, 1], n_records, p=[0.83, 0.17]), 
         'Rating': np.random.choice([3, 4, 5], n_records, p=[0.1, 0.3, 0.6]),
-        'CO2_Saved_kg': [0.15] * n_records # 0.15kg of CO2 saved per sample by avoiding dedicated vans
+        'CO2_Saved_kg': [0.15] * n_records 
     }
     
     df = pd.DataFrame(data)
@@ -168,6 +168,8 @@ st.sidebar.markdown("<br><br><br>", unsafe_allow_html=True)
 st.sidebar.caption("👨‍💻 **Founder:** Syed Ali Kavish Abdi")
 st.sidebar.caption("🎓 **Institution:** SP Jain School of Global Management")
 st.sidebar.caption("📚 **Cohort:** MGB Term 3 | Section B")
+st.sidebar.caption("👩‍🏫 **Professor:** Dr. Roshni Paul")
+st.sidebar.caption("🚀 **Subject:** Entrepreneurship for a disruptive launch")
 
 # -------------------------------------------------------------------------
 # PAGE 0: THE VISION (LANDING PAGE)
@@ -217,9 +219,8 @@ elif "FMCG Brand Portal" in portal_view:
     with col_f2:
         selected_loc = st.multiselect("Filter Target Delivery Zones:", df_logs['Location'].unique(), default=df_logs['Location'].unique())
         
-    # Simulated API Loading Animation
     with st.spinner('Syncing real-time node intercept data...'):
-        time.sleep(0.8) # Quick delay for premium feel
+        time.sleep(0.8) 
         
     filtered_df = df_logs[(df_logs['Product'] == selected_product) & (df_logs['Location'].isin(selected_loc))]
     
@@ -424,7 +425,7 @@ elif "🧑‍🤝‍🧑 Consumer Empathy Map" in portal_view:
     render_footer()
 
 # -------------------------------------------------------------------------
-# PAGE 6: SYSTEM ARCHITECTURE
+# PAGE 6: SYSTEM Architecture
 # -------------------------------------------------------------------------
 elif "System Architecture" in portal_view:
     st.title("⚙️ System Architecture & Tech Stack")
